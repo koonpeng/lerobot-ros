@@ -70,14 +70,16 @@ class ROS2Interface:
         if not rclpy.ok():
             rclpy.init()
 
-        self.robot_node = Node("moveit2_interface_node", namespace=self.config.namespace)
+        self.robot_node = Node(
+            "moveit2_interface_node", namespace=self.config.namespace
+        )
         if self.action_type == ActionType.JOINT_POSITION:
             self.pos_cmd_pub = self.robot_node.create_publisher(
-                Float64MultiArray, "/position_controller/commands", 10
+                Float64MultiArray, self.config.joint_position_topic, 10
             )
         elif self.action_type == ActionType.JOINT_TRAJECTORY:
             self.traj_cmd_pub = self.robot_node.create_publisher(
-                JointTrajectory, "/arm_controller/joint_trajectory", 10
+                JointTrajectory, self.config.joint_trajectory_topic, 10
             )
         elif self.action_type == ActionType.CARTESIAN_VELOCITY:
             self.moveit2_servo = MoveIt2Servo(
@@ -115,7 +117,9 @@ class ROS2Interface:
 
         self.is_connected = True
 
-    def send_joint_position_command(self, joint_positions: list[float], unnormalize: bool = True) -> None:
+    def send_joint_position_command(
+        self, joint_positions: list[float], unnormalize: bool = True
+    ) -> None:
         """
         Send a command to the robot's joints.
         Args:
@@ -123,10 +127,15 @@ class ROS2Interface:
             unnormalize (bool): Whether to unnormalize the joint positions based on the robot's configuration.
         """
         if not self.robot_node:
-            raise DeviceNotConnectedError("ROS2Interface is not connected. You need to call `connect()`.")
+            raise DeviceNotConnectedError(
+                "ROS2Interface is not connected. You need to call `connect()`."
+            )
 
         if unnormalize:
-            if self.config.min_joint_positions is None or self.config.max_joint_positions is None:
+            if (
+                self.config.min_joint_positions is None
+                or self.config.max_joint_positions is None
+            ):
                 raise ValueError(
                     "Joint position normalization requires min and max joint positions to be set."
                 )
@@ -147,7 +156,9 @@ class ROS2Interface:
 
         if self.action_type == ActionType.JOINT_TRAJECTORY:
             if self.traj_cmd_pub is None:
-                raise DeviceNotConnectedError("Trajectory command publisher is not initialized.")
+                raise DeviceNotConnectedError(
+                    "Trajectory command publisher is not initialized."
+                )
             msg = JointTrajectory()
             msg.joint_names = self.config.arm_joint_names
             point = JointTrajectoryPoint()
@@ -156,14 +167,18 @@ class ROS2Interface:
             self.traj_cmd_pub.publish(msg)
         else:
             if self.pos_cmd_pub is None:
-                raise DeviceNotConnectedError("Position command publisher is not initialized.")
+                raise DeviceNotConnectedError(
+                    "Position command publisher is not initialized."
+                )
             msg = Float64MultiArray()
             msg.data = joint_positions
             self.pos_cmd_pub.publish(msg)
 
     def servo(self, linear, angular, normalize: bool = True) -> None:
         if not self.moveit2_servo:
-            raise DeviceNotConnectedError("ROS2Interface is not connected. You need to call `connect()`.")
+            raise DeviceNotConnectedError(
+                "ROS2Interface is not connected. You need to call `connect()`."
+            )
 
         if normalize:
             linear = [v * self.config.max_linear_velocity for v in linear]
@@ -179,7 +194,9 @@ class ROS2Interface:
             bool: True if the command was sent successfully, False otherwise.
         """
         if not self.robot_node:
-            raise DeviceNotConnectedError("ROS2Interface is not connected. You need to call `connect()`.")
+            raise DeviceNotConnectedError(
+                "ROS2Interface is not connected. You need to call `connect()`."
+            )
 
         if unnormalize:
             # Map normalized position (0=open, 1=closed) to actual gripper joint position
@@ -191,7 +208,9 @@ class ROS2Interface:
 
         if self.config.gripper_action_type == GripperActionType.TRAJECTORY:
             if self.gripper_traj_pub is None:
-                raise DeviceNotConnectedError("Gripper command publisher is not initialized.")
+                raise DeviceNotConnectedError(
+                    "Gripper command publisher is not initialized."
+                )
             msg = JointTrajectory()
             msg.joint_names = [self.config.gripper_joint_name]
             point = JointTrajectoryPoint()
@@ -201,7 +220,9 @@ class ROS2Interface:
             return True
         else:
             if not self.gripper_action_client:
-                raise DeviceNotConnectedError("Gripper action client is not initialized.")
+                raise DeviceNotConnectedError(
+                    "Gripper action client is not initialized."
+                )
 
             if not self.gripper_action_client.wait_for_server(timeout_sec=1.0):
                 logger.error("Gripper action server not available")
