@@ -90,13 +90,13 @@ class ROS2Interface:
 
         if self.config.gripper_action_type == GripperActionType.TRAJECTORY:
             self.gripper_traj_pub = self.robot_node.create_publisher(
-                JointTrajectory, "/gripper_controller/joint_trajectory", 10
+                JointTrajectory, self.config.gripper_trajectory_topic, 10
             )
         else:
             self.gripper_action_client = ActionClient(
                 self.robot_node,
                 GripperCommand,
-                "/gripper_controller/gripper_cmd",
+                self.config.gripper_action_name,
                 callback_group=ReentrantCallbackGroup(),
             )
             self._goal_msg = GripperCommand.Goal()

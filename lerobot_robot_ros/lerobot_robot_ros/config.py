@@ -58,13 +58,16 @@ class ROS2InterfaceConfig:
     min_joint_positions: list[float] | None = None
     max_joint_positions: list[float] | None = None
 
+    joint_position_topic: str = "/position_controller/commands"
+    joint_trajectory_topic: str = "/arm_controller/joint_trajectory"
+
     gripper_open_position: float = 0.0
     gripper_close_position: float = 1.0
 
     gripper_action_type: GripperActionType = GripperActionType.TRAJECTORY
 
-    joint_position_topic: str = "/position_controller/commands"
-    joint_trajectory_topic: str = "/arm_controller/joint_trajectory"
+    gripper_action_name: str = "/gripper_controller/gripper_cmd"
+    gripper_trajectory_topic: str = "/gripper_controller/joint_trajectory"
 
 
 @dataclass
