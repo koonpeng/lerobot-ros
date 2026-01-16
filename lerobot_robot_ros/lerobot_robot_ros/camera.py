@@ -78,7 +78,7 @@ class ROS2Camera(Camera):
         ):
             raise NotImplementedError("image conversion not supported yet")
         return np.array(self.last_image.data, dtype=np.uint8).reshape(
-            (self.config.width, self.config.height, 3)
+            (self.config.height, self.config.width, 3)
         )
 
     def async_read(self, timeout_ms: float = 0) -> NDArray:
