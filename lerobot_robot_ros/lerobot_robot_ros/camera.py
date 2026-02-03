@@ -1,3 +1,4 @@
+import re
 import threading
 import time
 from dataclasses import dataclass
@@ -17,7 +18,13 @@ from sensor_msgs.msg import Image
 @CameraConfig.register_subclass("ros2")
 @dataclass
 class ROS2CameraConfig(CameraConfig):
+    name: str
     topic: str
+
+    def __post_init__(self):
+        pattern = r"^[a-zA-Z_]+$"
+        if not re.match(pattern, self.name):
+            raise ValueError("Invalid name: Only letters and underscores are allowed.")
 
 
 class ROS2Camera(Camera):
@@ -55,7 +62,7 @@ class ROS2Camera(Camera):
             )
             self.executor_thread.start()
 
-        self.node = Node("lerobot_ros_camera")
+        self.node = Node(f"lerobot_ros_camera_{self.config.name}")
 
         def on_recv(msg: Image):
             self.last_image = msg
